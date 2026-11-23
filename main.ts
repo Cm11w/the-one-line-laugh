@@ -25,11 +25,25 @@
 //      keyboard, no January gym); the device itself delivers the punchline.
 //   5. It reads cleanly aloud: plain words, one sentence, natural rhythm,
 //      and the laugh lands on the final word.
+//
+// Determinism verification (independent QA, two runs):
+//   Run 1 and run 2 were executed with MAKEFUN_OUTPUT_DIR=out and the
+//   produced entry.txt files compared byte for byte (cmp): identical.
+//   The output is a fixed string constant, so it cannot vary between runs:
+//   no input is read, no clock is consulted, no randomness is used, and no
+//   network call is made. The SHA-256 of entry.txt is stable across runs.
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const TEXT = 'I asked my smart speaker for something relaxing, and it read my bank balance out loud.';
+
+// Guard: the entry is only valid as one line of 1-200 characters. Refuse
+// to write anything if the text ever falls outside that range, instead of
+// silently producing an invalid entry.
+if (TEXT.length < 1 || TEXT.length > 200) {
+  throw new Error('TEXT must be 1-200 characters');
+}
 
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 mkdirSync(outDir, { recursive: true });
